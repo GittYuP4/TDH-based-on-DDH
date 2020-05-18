@@ -3,15 +3,19 @@ import random
 from TDH_functions import *
 import matplotlib.pyplot
 
+from groups import Group #https://github.com/Smeths/pygroup
+
 #Goal: Implement the Trapdoor hash function from DDH assumption
 
-#4.2. TDH for Index Predicates from DDH
 
+#4.2. TDH for Index Predicates from DDH
 ##4.2.1“basic” construction of a rate-1/λ TDH scheme for index predicates
-#S(1^lambda,1^n):
+#S for Sampling Algorithm with inputs security parameter lambda and input length n (1^lambda,1^n)
+#..and outputing as hash key hk
 
 #1 1. Sample (G; p; g); Multiplicative abelian group G of prime order p, with a public generator g
-q = 3 #can we take any prime?
+G = Group("mult",15)
+q = G.o
 g = getGenerator(q)
 #2. Sample a matrix A
 n = 10
@@ -21,21 +25,38 @@ print(A)
 hk = hashkey(A,n)
 print(hk)
 
-#G(hk,fi)
+#G for generating algorithm takes as inputs a hash key hk and a predicate f element of Fn (predicate) (hk,fi) and outputs a pair of an encoding key ek and trapdoor td
 #1.s;trapdoor: uniform integer t in Zp
-s = random.randint(-1000,1000)
-t = random.randint(-1000,1000)
-#2.
+#g generates group Zp with g**k mod p with values between 1 and p-1 --s,t both element of Zp
+s = random.randint(1,q-1)
+t = random.randint(1,q-1)
+#2. Set
 u = g**s
+key = key_matrix(n,A,s,t)
 print(key_matrix(n,A,s,t))
+#3. Output
+ek = (u,key)
+td = (s,t)
 
+#H for Hashing algorithm taking hash key hk, a string x element of {0,1}**n as well as randomness p elemnt of {0,1}* as input.
+#... and deterministically outputs a hash value h element of {0,1}**n
+r = random.randint(1,q-1)
+h = (g**r) * A
+
+#E(ek,x;p) -- Hinting -- The encoding algorithm takes as input an encoding key ek, string x element of {0,1}**n as well as randomness p elemnt of {0,1}* as input.
+#..and deterministically outputs an encoding e element of {0,1}**w.
+e = u**r * hashkey(key,n)
+print(e)
+
+#D(td,h) -- Decoding -- The decoding algorithm takes as input a trapdoor td, a hash value h element of {0,1}**n_long
+#...and outputs a pair of a 0-encoding and a 1-necoding (e0,e1) element of {0,1}**w x {0,1}**w
+e0 = h**s
+e1 = h**s * g**t
+print(e0)
+print(e1)
 
 ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
 
 
-#6 Applications of Rate-1 OT from 4.2.2.
-
-
-#7 Private Laconic OT
 
 

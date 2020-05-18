@@ -37,11 +37,11 @@ def hashkey(A,n):
 
 def key_matrix(n,A,s,t):
     i = random.randint(0,1)            #i remains private given the encoding key
-    matrix = np.zeros((2,n))
+    matrix = np.zeros((2,n),np.int8)
     for row in matrix:
         for col in matrix:
-            if row == i and col == 1:
-                matrix[row][col] = (A[row][col])**s * A**t
+            if matrix[i][1]:
+               matrix[row][col] = (A[row][col])**s * A**t
             else:
                 matrix[row][col] = (A[row][col])**s
     return matrix
