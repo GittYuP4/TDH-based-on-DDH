@@ -20,49 +20,54 @@ class TDH(object):
     def sampling_algorithm(self,lambda_var,n):
         #1. Sample (G; p; g); (Finite-) multiplicative abelian group G of prime order p, with a public generator g
         G = Group("mult", 15)
-        q = G.o
-        g = getGenerator(q)
+        p = G.o
+        g = np.array(G.gcycle(p))
+        #g = g**lambda_var%p, g**lambda mod p
         #2. Sample a matrix A
         A = getBinaryMatrix(n)
         print(A)
         #3.Create hash key output; Pillar sign means Product from i=1 to n or over all elements i in set I
-        hk = hashkey(A,n)
-        print(hk)
-        return hk
+        return (G,p,g),A
 
     #G for generating algorithm takes as inputs a hash key hk and a predicate f element of Fn (predicate) (hk,fi) and outputs a pair of an encoding key ek and trapdoor td
     def generating_algorithm(self,sampling_algorithm):
         #1.s;trapdoor: uniform integer t in Zp
         #g generates group Zp with g**k mod p with values between 1 and p-1 --s,t both element of Zp
-        s = random.randint(1,q-1)
-        t = random.randint(1,q-1)
+        (G,p,g), A = sampling_algorithm
+        s = random.choice(G.g())
+        t = random.choice(G.g())
         #2. Set
         u = g**s
-        key = key_matrix(n,A,s,t)
-        print(key_matrix(n,A,s,t))
+        key = key_matrix(n,A,s,t,g)
+        print(key_matrix(n,A,s,t,g))
         #3. Output
         ek = (u,key)
         td = (s,t)
+        return (ek,td)
+    #H for Hashing algorithm taking hash key hk, a string x element of {0,1}**n as well as randomness p_dense element of {0,1}* as input.
+    #... and deterministically outputs a hash value h element of {0,1}**n_long
+    def hashing_algorithm(self,sampling_algorithm,p_dense,n):
+        (G,p,g), A = sampling_algorithm
+        x = hashkey(A, n)
+        print(x)
+        r = random.choice(G.g())
+        h = (g**r) * A
+        return h
 
-    #H for Hashing algorithm taking hash key hk, a string x element of {0,1}**n as well as randomness p elemnt of {0,1}* as input.
-    #... and deterministically outputs a hash value h element of {0,1}**n
-    r = random.randint(1,q-1)
-    h = (g**r) * A
-
-    #E(ek,x;p) -- Hinting -- The encoding algorithm takes as input an encoding key ek, string x element of {0,1}**n as well as randomness p elemnt of {0,1}* as input.
+    #E(ek,x;p) -- Hinting -- The encoding algorithm takes as input an encoding key ek, string x element of {0,1}**n as well as randomness p_dense elemnt of {0,1}* as input.
     #..and deterministically outputs an encoding e element of {0,1}**w.
-    e = u**r * hashkey(key,n)
-    print(e)
+    def encoding_algorithm(self,sampling_algorithm):
+        e = u**r * hashkey(key,n)
+        return
 
     #D(td,h) -- Decoding -- The decoding algorithm takes as input a trapdoor td, a hash value h element of {0,1}**n_long
     #...and outputs a pair of a 0-encoding and a 1-necoding (e0,e1) element of {0,1}**w x {0,1}**w
-    e0 = h**s
-    e1 = h**s * g**t
-    print(e0)
-    print(e1)
+    def decoding_algorithm(self,hashing_algorithm):
+        e0 = h**s
+        e1 = h**s * g**t
+        return e0,e1
 
-    ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
-
+        ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
 
 if __name__ == '__main__':
     lambda_var = int(raw_input("Enter lambda value: "))

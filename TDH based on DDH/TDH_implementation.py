@@ -15,8 +15,9 @@ from groups import Group #https://github.com/Smeths/pygroup
 
 #1 1. Sample (G; p; g); Multiplicative abelian group G of prime order p, with a public generator g
 G = Group("mult",15)
-q = G.o
-g = getGenerator(q)
+p = G.o
+g = np.array(G.gcycle(p)) #g**lambda mod p
+print(g)
 #2. Sample a matrix A
 n = 10
 A = getBinaryMatrix(n)
@@ -28,12 +29,12 @@ print(hk)
 #G for generating algorithm takes as inputs a hash key hk and a predicate f element of Fn (predicate) (hk,fi) and outputs a pair of an encoding key ek and trapdoor td
 #1.s;trapdoor: uniform integer t in Zp
 #g generates group Zp with g**k mod p with values between 1 and p-1 --s,t both element of Zp
-s = random.randint(1,q-1)
-t = random.randint(1,q-1)
+s = random.choice(G.g())
+t = random.choice(G.g())
 #2. Set
-u = g**s
-key = key_matrix(n,A,s,t)
-print(key_matrix(n,A,s,t))
+u = np.power(g,s)
+key = key_matrix(n,A,s,t,g)
+print(key)
 #3. Output
 ek = (u,key)
 td = (s,t)
@@ -56,7 +57,5 @@ print(e0)
 print(e1)
 
 ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
-
-
 
 
