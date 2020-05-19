@@ -14,17 +14,18 @@ from groups import Group #https://github.com/Smeths/pygroup
 #..and outputing as hash key hk
 
 #1 1. Sample (G; p; g); Multiplicative abelian group G of prime order p, with a public generator g
-G = Group("mult",15)
+G = Group("mult",19)
 p = G.o
 g = np.array(G.gcycle(p)) #g**lambda mod p
-print(g)
+for i in g:
+    if i != 1:
+        g = i
 #2. Sample a matrix A
 n = 10
 A = getBinaryMatrix(n)
-print(A)
 #3.Create hash key output; Pillar sign means Product from i=1 to n or over all elements i in set I
-hk = hashkey(A,n)
-print(hk)
+h = hash_value(A,n)
+print(h)
 
 #G for generating algorithm takes as inputs a hash key hk and a predicate f element of Fn (predicate) (hk,fi) and outputs a pair of an encoding key ek and trapdoor td
 #1.s;trapdoor: uniform integer t in Zp
@@ -41,9 +42,9 @@ td = (s,t)
 
 #H for Hashing algorithm taking hash key hk, a string x element of {0,1}**n as well as randomness p elemnt of {0,1}* as input.
 #... and deterministically outputs a hash value h element of {0,1}**n
-r = random.randint(1,q-1)
+r = random.choice(G.g())
 h = (g**r) * A
-
+print(h)
 #E(ek,x;p) -- Hinting -- The encoding algorithm takes as input an encoding key ek, string x element of {0,1}**n as well as randomness p elemnt of {0,1}* as input.
 #..and deterministically outputs an encoding e element of {0,1}**w.
 e = u**r * hashkey(key,n)

@@ -5,10 +5,7 @@ import numpy as np
 
 #https://stackoverflow.com/questions/27784465/how-to-randomly-get-0-or-1-every-time
 
-# Sieve of Eratosthenes to generate primes (if needed)
-# Code by David Eppstein, UC Irvine, 28 Feb 2002
-# http://code.activestate.com/recipes/117119/
-
+#generate random public parameters with values {0,1} and put into matrix A
 def getBinaryMatrix(n):
     matrix = np.array([[str(randint(0, 1)) for _ in range(0, n)] for _ in range(0, 2)]).astype(np.int8)
     #for row in matrix:
@@ -16,7 +13,7 @@ def getBinaryMatrix(n):
 
     return matrix
 
-def hashkey(A,n):
+def hash_value(A,n):
     #hk = np.prod(A)
     hk = []
     y=0
@@ -31,11 +28,11 @@ def hashkey(A,n):
 
 def key_matrix(n,A,s,t,g):
     i = random.randint(0,n-1)            #i remains private given the encoding key
-    matrix = np.ones((2,n),np.int8)
-    for row in matrix:
+    #matrix = np.ones((2,n),np.int8)
+    for row in A-1:
         for col in range(0,n-1):
-            if matrix[1][i]:
-               matrix[1][col] = ((A[1][col])**s)*(g**t)
+            if A[1][i]:
+                A[1][col] = ((A[1][col])**t)*g
             else:
-                matrix[row][col] = (A[row][col])**s
-    return matrix
+                A[row][col] = (A[row][col])**t
+    return A
