@@ -5,12 +5,10 @@ import numpy as np
 
 #https://stackoverflow.com/questions/27784465/how-to-randomly-get-0-or-1-every-time
 
-#generate random public parameters with values {0,1} and put into matrix A
+#generate random public parameters with values {0,1} and put into binary matrix A
 def getBinaryMatrix(n):
-    matrix = np.array([[str(randint(0, 1)) for _ in range(0, n)] for _ in range(0, 2)]).astype(np.int8)
-    #for row in matrix:
-     #   print("".join(row))
-
+    #matrix = np.array([[str(randint(0, 1)) for _ in range(0, n)] for _ in range(0, 2)]).astype(np.int8)
+    matrix = np.random.randint(2, size=(2, n))
     return matrix
 
 def hash_value(A,n):
@@ -27,12 +25,14 @@ def hash_value(A,n):
     return hk
 
 def key_matrix(n,A,s,t,g):
-    i = random.randint(0,n-1)            #i remains private given the encoding key
-    #matrix = np.ones((2,n),np.int8)
-    for row in A-1:
-        for col in range(0,n-1):
-            if A[1][i]:
-                A[1][col] = ((A[1][col])**t)*g
+    ii = random.randint(0,n-1)            #ii remains private given the encoding key
+    key_matrix = A
+    rows = 2
+    columns = n
+    for i in range(rows):
+        for j in range(columns):
+            if j == ii and i==1:
+                key_matrix[1][j] = ((A[1][ii])**t)*g
             else:
-                A[row][col] = (A[row][col])**t
-    return A
+                key_matrix[i][j] = (A[i][j])**t
+    return key_matrix
