@@ -38,26 +38,26 @@ class TDH(object):
         #1.s;trapdoor: uniform integer t in Zp
         #g generates group Zp with g**k mod p with values between 1 and p-1 --s,t both element of Zp
         (G,p,g), A = sampling_algorithm
-        s = np.int64(random.choice(G))
-        trapdoor = random.choice(G)
+        s = np.int64(random.choice(G)) #s and t are trapdoor functions
+        t = random.choice(G)
         #2. Set
         u = g**s
-        B = key_matrix(n,A,s,trapdoor,g)
+        B = key_matrix(n,A,s,t,g)
         #key_1 = encoding_key[0][0] #TBD: replace by algorithm choosing random smaller matrix from key-matrix
         #key_2 = encoding_key[1][1]
         #3. Output
         ek = (u,B)
-        td = (s,trapdoor)
+        td = (s,t)
         return ek,td
     #H for Hashing algorithm taking hash key hk, a string x element of {0,1}**n as well as randomness p_dense element of {0,1}* as input.
     #... and deterministically outputs a hash value h element of {0,1}**n_long
 
     def hashing_algorithm(self,sampling_algorithm,n): #done by the sender, receiver only gets hash-output
         (G,p,g), A = sampling_algorithm
-        A_prod = hash_value(A, n)
+        A_prod = hash_value_impl_me(A, n)
         r = np.int64(random.choice(G))
-        h = (g**r) * A_prod
-        return h
+        #h = (g**r) * A_prod -> paper ansatz
+        return A_prod #like in yt
 
     #E(ek,x;p) -- Hinting -- The encoding algorithm takes as input an encoding key ek, string x element of {0,1}**n as well as randomness p_dense elemnt of {0,1}* as input.
     #..and deterministically outputs an encoding e element of {0,1}**w.
@@ -65,23 +65,32 @@ class TDH(object):
         (G, p, g), A = sampling_algorithm
         (u,B) = generating_algorithm[0]
         r = np.int64(random.choice(G))
-        B_prod = hash_value(B,n) # taken only x parts of key_nr => is that the whole encryption?
-        e = (u**r)*B_prod
+        B_prod = hash_value_impl_me(B,n) # taken only x parts of key_nr => is that the whole encryption?
+        #e = (u**r)*B_prod -> paper ansatz
         #ê = distance(e_key_nr)%2 #TBD
         #e = u**r * hashkey(key,n)
-        return e
+        return B_prod
 
     #D(td,h) -- Decoding -- The decoding algorithm takes as input a trapdoor td, a hash value h element of {0,1}**n_long
     #...and outputs a pair of a 0-encoding and a 1-necoding (e0,e1) element of {0,1}**w x {0,1}**w
     def decoding_algorithm(self,sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm): #decoding is done by receiver but problem is only needs generator value others are private to sender --> TBD
         (G, p, g), A = sampling_algorithm #imported for the generator needed but it seams as its not the generator meant but the g from matrix key -- as well receiver can't have access to full Matrix A,otherwise would not need encoding
         h = hashing_algorithm
+        e = encoding_algorithm
         (s,t) = generating_algorithm[1]
         h_s = [element ** s for element in h]
         g_t = g**t
         h_s_g_t = [element * g_t for element in h_s]
-        e_0 = h_s
-        e_1 = h_s_g_t
+        x_i = None
+        e_0 = [None] * (len(h_s))
+        e_1 = [None] * (len(h_s))
+        for i in range(len(h_s)):
+            if e[i] == h_s[i]:
+                x_i = 0
+            if e[i] == h_s_g_t[i]:
+                x_i = 1
+            e_0[i] = h_s[i]
+            e_1[i] = h_s_g_t[i] ** x_i
         return e_0,e_1
 
         ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
@@ -96,5 +105,3 @@ if __name__ == '__main__':
     decoding_algorithm = TDH(lambda_var,n).decoding_algorithm(sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm)
     print(encoding_algorithm)
     print(decoding_algorithm)
-    if encoding_algorithm == decoding_algorithm:
-        print('Nice')

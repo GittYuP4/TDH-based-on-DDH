@@ -12,6 +12,16 @@ def getRandomMatrix(n):
     return matrix
 
 def hash_value(A,n):
+    y = 1
+    for i in range(2):
+        for j in range(10):
+            if i == 0 and j == 0:
+                y = A[0][0]
+            else:
+                y = y * A[i][j]
+    return y
+
+def hash_value_impl_me(A,n):
     #hk = np.prod(A)
     hk = []
     y=0
