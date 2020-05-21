@@ -6,7 +6,7 @@ import numpy as np
 #https://stackoverflow.com/questions/27784465/how-to-randomly-get-0-or-1-every-time
 
 #generate random public parameters with values {0,1} and put into binary matrix A
-def getBinaryMatrix(n):
+def getRandomMatrix(n):
     #matrix = np.array([[str(randint(0, 1)) for _ in range(0, n)] for _ in range(0, 2)]).astype(np.int8)
     matrix = np.random.randint(2, size=(2, n))
     return matrix
@@ -32,7 +32,7 @@ def key_matrix(n,A,s,t,g):
     for i in range(rows):
         for j in range(columns):
             if j == ii and i==1:
-                key_matrix[1][j] = ((A[1][ii])**t)*g
+                key_matrix[1][j] = ((key_matrix[1][ii])**s)*(g**t)
             else:
-                key_matrix[i][j] = (A[i][j])**t
+                key_matrix[i][j] = (key_matrix[i][j])**s
     return key_matrix
