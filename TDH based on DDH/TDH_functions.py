@@ -25,7 +25,7 @@ def hash_value(A,n):
     return hk
 
 def key_matrix(n,A,s,t,g):
-    ii = random.randint(0,n-1)            #ii remains private given the encoding key
+    ii = random.randint(0,n-1) #ii, meaning i, remains private given the encoding key
     key_matrix = A
     rows = 2
     columns = n
