@@ -2,10 +2,12 @@ import numpy as np
 import random
 from pip._vendor.distlib.compat import raw_input
 from TDH_functions import *
-
 from groups import Group #https://github.com/Smeths/pygroup
+import hashlib
 
 #Goal: Implement the Trapdoor hash function from DDH assumption
+
+#Encoding working without variation and yt hash function
 
 class TDH(object):
     #4.2. TDH for Index Predicates from DDH
@@ -22,12 +24,12 @@ class TDH(object):
         Gg = G.g()
         p = G.o
         g = np.array(G.gcycle(p))
-        rand_elem_1 = np.array(np.random.choice(p, 10)).astype(int)
-        rand_elem_2 = np.array(np.random.choice(p, 10)).astype(int)
-        A = np.concatenate(([rand_elem_1], [rand_elem_2])).astype('int64')
+        rand_elem_1 = np.array(np.random.choice(p, 10), dtype=np.longdouble)
+        rand_elem_2 = np.array(np.random.choice(p, 10), dtype=np.longdouble)
+        A = np.concatenate(([rand_elem_1], [rand_elem_2]))
         for i in g:
             if i != 1:
-                g = np.int64(i)
+                g = np.longdouble(i)
         #2. Sample a matrix A
         #3.Create hash key output; Pillar sign means Product from i=1 to n or over all elements i in set I
         hashkey = (Gg,p,g), A
@@ -38,7 +40,7 @@ class TDH(object):
         #1.s;trapdoor: uniform integer t in Zp
         #g generates group Zp with g**k mod p with values between 1 and p-1 --s,t both element of Zp
         (G,p,g), A = sampling_algorithm
-        s = np.int64(random.choice(G)) #s and t are trapdoor functions
+        s = np.longdouble(random.choice(G)) #s and t are trapdoor functions
         t = random.choice(G)
         #2. Set
         u = g**s
@@ -54,22 +56,23 @@ class TDH(object):
 
     def hashing_algorithm(self,sampling_algorithm,n): #done by the sender, receiver only gets hash-output
         (G,p,g), A = sampling_algorithm
-        A_prod = hash_value_impl_me(A, n)
-        r = np.int64(random.choice(G))
-        #h = (g**r) * A_prod -> paper ansatz
-        return A_prod #like in yt
+        A_prod = hash_value_paper(A,p,g,n)
+        r = 5       #np.longdouble(random.choice(G))
+        full_hash = (g**r) * A_prod
+        return full_hash #like in yt
 
     #E(ek,x;p) -- Hinting -- The encoding algorithm takes as input an encoding key ek, string x element of {0,1}**n as well as randomness p_dense elemnt of {0,1}* as input.
     #..and deterministically outputs an encoding e element of {0,1}**w.
     def encoding_algorithm(self,generating_algorithm,sampling_algorithm,n): #encoding done by sender
         (G, p, g), A = sampling_algorithm
         (u,B) = generating_algorithm[0]
-        r = np.int64(random.choice(G))
-        B_prod = hash_value_impl_me(B,n) # taken only x parts of key_nr => is that the whole encryption?
+        r = 5    #np.longdouble(random.choice(G))
+        u_r = u**r
+        B_prod = hash_value_paper(B,p,g,n) # taken only x parts of key_nr => is that the whole encryption?
         #e = (u**r)*B_prod -> paper ansatz
         #ê = distance(e_key_nr)%2 #TBD
-        #e = u**r * hashkey(key,n)
-        return B_prod
+        full_e = u_r * B_prod
+        return full_e
 
     #D(td,h) -- Decoding -- The decoding algorithm takes as input a trapdoor td, a hash value h element of {0,1}**n_long
     #...and outputs a pair of a 0-encoding and a 1-necoding (e0,e1) element of {0,1}**w x {0,1}**w
@@ -78,21 +81,26 @@ class TDH(object):
         h = hashing_algorithm
         e = encoding_algorithm
         (s,t) = generating_algorithm[1]
-        h_s = [element ** s for element in h]
+        #h_s = [element ** s for element in h]
+        h_s = h**s
         g_t = g**t
-        h_s_g_t = [element * g_t for element in h_s]
-        x_i = None
-        e_0 = [None] * (len(h_s))
-        e_1 = [None] * (len(h_s))
-        for i in range(len(h_s)):
-            if e[i] == h_s[i]:
-                x_i = 0
-            if e[i] == h_s_g_t[i]:
-                x_i = 1
-            e_0[i] = h_s[i]
-            e_1[i] = h_s_g_t[i] ** x_i
-        return e_0,e_1
+        #h_s_g_t = [element * g_t for element in h_s]
+        h_s_g_t = h_s*g_t
+        x_i=0
+        #e_0 = [None] * (len(h_s))
+        #e_1 = [None] * (len(h_s))
+        e_0 = 0
+        e_1 = 0
+        #for i in range(len(h_s)):
+        if e == h_s:
+            x_i = 0
+        if e == h_s_g_t:
+            x_i = 1
+        e_0 = h_s
+        e_1 = h_s_g_t
+        return e_0,e_1 #geben i keys aus hier
 
+#aufgeschrieben wegen fehlender Variation, kann aber gar nicht mehr haben, da maximal eine Kolonne/ein e0,e1 für x[i] gefunden werden kann; d.h. nur e0[i],e1[i] per key i ausgeben
         ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
 
 if __name__ == '__main__':

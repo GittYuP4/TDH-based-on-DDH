@@ -2,6 +2,7 @@ from __future__ import generators
 from random import randint
 import random
 import numpy as np
+import hashlib
 
 #https://stackoverflow.com/questions/27784465/how-to-randomly-get-0-or-1-every-time
 
@@ -11,28 +12,33 @@ def getRandomMatrix(n):
     matrix = np.random.randint(2, size=(2, n))
     return matrix
 
-def hash_value(A,n):
-    y = 1
+def hash_value_paper(A,p,g,n):
+    hash = 0
     for i in range(2):
         for j in range(10):
-            if i == 0 and j == 0:
-                y = A[0][0]
-            else:
-                y = y * A[i][j]
-    return y
+            hash = p*hash + A[i][j]    #https://math.stackexchange.com/questions/188003/hash-function-for-matrices-over-finite-field-matlab
+    return hash
 
-def hash_value_impl_me(A,n):
-    #hk = np.prod(A)
-    hk = []
+#https://www.geeksforgeeks.org/sha-in-python/ -- SHA, ( Secure Hash Algorithms )
+#The variety of SHA-2 hashes can lead to a bit of confusion, as websites and authors express them differently.
+#If you see “SHA-2,” “SHA-256” or “SHA-256 bit,” those names are referring to the same thing. If you see “SHA-224,” “SHA-384,” or “SHA-512,” those are referring to the alternate bit-lengths of SHA-2.
+def sha256_hash(A):
+    A = str(A)
+    result = hashlib.sha1(A.encode()) #This hash function belong to hash class SHA-2, the internal block size of it is 32 bits.
+    return result.hexdigest()
+
+
+def hash_value_yt(A,n):
+    #works
+    hash = []
     y=0
     while y != n-1:
             if A[0][y] == 0:
-               hk.append(0)
+               hash.append(0)
             if A[1][y] == 1:
-               hk.append(1)
+               hash.append(1)
             y += 1
-
-    return hk
+    return hash
 
 def key_matrix(n,A,s,t,g):
     ii = random.randint(0,n-1) #ii, meaning i, remains private given the encoding key
