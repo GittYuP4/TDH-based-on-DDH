@@ -8,15 +8,16 @@ import hashlib
 
 #generate random public parameters with values {0,1} and put into binary matrix A
 def getRandomMatrix(n):
-    #matrix = np.array([[str(randint(0, 1)) for _ in range(0, n)] for _ in range(0, 2)]).astype(np.int8)
-    matrix = np.random.randint(2, size=(2, n))
+    matrix = np.array([[str(randint(0, 1)) for _ in range(0, n)] for _ in range(0, 2)]).astype(np.int8)
+    #matrix = np.random.randint(2, size=(2, n))
     return matrix
 
-def hash_value_paper(A,p,g,n):
-    hash = 0
+def hash_value_paper(A,r,g,n):
+    hash = np.longdouble(0)
+    g_r = g**r
     for i in range(2):
-        for j in range(10):
-            hash = p*hash + A[i][j]    #https://math.stackexchange.com/questions/188003/hash-function-for-matrices-over-finite-field-matlab
+        for j in range(n):
+            hash = g_r*hash + A[i][j]    #https://math.stackexchange.com/questions/188003/hash-function-for-matrices-over-finite-field-matlab
     return hash
 
 #https://www.geeksforgeeks.org/sha-in-python/ -- SHA, ( Secure Hash Algorithms )
@@ -26,7 +27,6 @@ def sha256_hash(A):
     A = str(A)
     result = hashlib.sha1(A.encode()) #This hash function belong to hash class SHA-2, the internal block size of it is 32 bits.
     return result.hexdigest()
-
 
 def hash_value_yt(A,n):
     #works

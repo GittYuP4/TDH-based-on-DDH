@@ -20,19 +20,24 @@ class TDH(object):
     #..and outputing as hash key hk
     def sampling_algorithm(self,lambda_var,n): # done by the sender, output also private and only used in the hashing_algorithm again by the sender
         #1. Sample (G; p; g); (Finite-) multiplicative abelian group G of prime order p, with a public generator g
-        G = Group("mult", 15)
-        Gg = G.g()
-        p = G.o
-        g = np.array(G.gcycle(p))
+        G = Group("mult", 9)
+        Gg = G.g() #Group representation
+        p = G.o #order of G
+        generators_of_G = []
+        for i in Gg: #finding generator of Group G
+            x = np.array(G.gcycle(i))
+            x_sorted = np.sort(x)
+            if np.array_equal(Gg,x_sorted):
+                generators_of_G.append(i)
+        generator = random.choice(generators_of_G)
         rand_elem_1 = np.array(np.random.choice(p, 10), dtype=np.longdouble)
         rand_elem_2 = np.array(np.random.choice(p, 10), dtype=np.longdouble)
         A = np.concatenate(([rand_elem_1], [rand_elem_2]))
-        for i in g:
-            if i != 1:
-                g = np.longdouble(i)
+        #A = getRandomMatrix(n)
+        p = np.longdouble(G.o)
         #2. Sample a matrix A
         #3.Create hash key output; Pillar sign means Product from i=1 to n or over all elements i in set I
-        hashkey = (Gg,p,g), A
+        hashkey = (Gg,p,generator), A
         return hashkey
 
     #G for generating algorithm takes as inputs a hash key hk and a predicate f element of Fn (predicate) (hk,fi) and outputs a pair of an encoding key ek and trapdoor td
@@ -41,7 +46,7 @@ class TDH(object):
         #g generates group Zp with g**k mod p with values between 1 and p-1 --s,t both element of Zp
         (G,p,g), A = sampling_algorithm
         s = np.longdouble(random.choice(G)) #s and t are trapdoor functions
-        t = random.choice(G)
+        t = np.longdouble(random.choice(G))
         #2. Set
         u = g**s
         B = key_matrix(n,A,s,t,g)
@@ -56,23 +61,22 @@ class TDH(object):
 
     def hashing_algorithm(self,sampling_algorithm,n): #done by the sender, receiver only gets hash-output
         (G,p,g), A = sampling_algorithm
-        A_prod = hash_value_paper(A,p,g,n)
-        r = 5       #np.longdouble(random.choice(G))
-        full_hash = (g**r) * A_prod
-        return full_hash #like in yt
+        r = p
+        H_x = hash_value_paper(A,r,g,n)
+        #r = 5       #np.longdouble(random.choice(G))
+        #full_hash = (g**r) * A_prod
+        return H_x #like in yt
 
     #E(ek,x;p) -- Hinting -- The encoding algorithm takes as input an encoding key ek, string x element of {0,1}**n as well as randomness p_dense elemnt of {0,1}* as input.
     #..and deterministically outputs an encoding e element of {0,1}**w.
     def encoding_algorithm(self,generating_algorithm,sampling_algorithm,n): #encoding done by sender
         (G, p, g), A = sampling_algorithm
         (u,B) = generating_algorithm[0]
-        r = 5    #np.longdouble(random.choice(G))
-        u_r = u**r
-        B_prod = hash_value_paper(B,p,g,n) # taken only x parts of key_nr => is that the whole encryption?
+        H_x = hash_value_paper(B,p,u,n) # taken only x parts of key_nr => is that the whole encryption?
         #e = (u**r)*B_prod -> paper ansatz
         #ê = distance(e_key_nr)%2 #TBD
-        full_e = u_r * B_prod
-        return full_e
+        #full_e = u_r * B_prod
+        return H_x
 
     #D(td,h) -- Decoding -- The decoding algorithm takes as input a trapdoor td, a hash value h element of {0,1}**n_long
     #...and outputs a pair of a 0-encoding and a 1-necoding (e0,e1) element of {0,1}**w x {0,1}**w
@@ -111,5 +115,5 @@ if __name__ == '__main__':
     hashing_algorithm = TDH(lambda_var,n).hashing_algorithm(sampling_algorithm,n)
     encoding_algorithm = TDH(lambda_var,n).encoding_algorithm(generating_algorithm,sampling_algorithm,n)
     decoding_algorithm = TDH(lambda_var,n).decoding_algorithm(sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm)
-    print(encoding_algorithm)
+    print(generating_algorithm[0][1])
     print(decoding_algorithm)
