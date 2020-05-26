@@ -13,11 +13,13 @@ def getRandomMatrix(n):
     return matrix
 
 def hash_value_paper(A,r,g,n):
-    hash = np.longdouble(0)
+    hash = np.longdouble(1)
     g_r = g**r
     for i in range(2):
         for j in range(n):
-            hash = g_r*hash + A[i][j]    #https://math.stackexchange.com/questions/188003/hash-function-for-matrices-over-finite-field-matlab
+            #hash = g_r*hash + A[i][j]    #https://math.stackexchange.com/questions/188003/hash-function-for-matrices-over-finite-field-matlab
+            hash = hash*A[i][j]
+    hash = g_r*hash
     return hash
 
 #https://www.geeksforgeeks.org/sha-in-python/ -- SHA, ( Secure Hash Algorithms )
@@ -42,13 +44,13 @@ def hash_value_yt(A,n):
 
 def key_matrix(n,A,s,t,g):
     ii = random.randint(0,n-1) #ii, meaning i, remains private given the encoding key
-    key_matrix = A
+    key_matrix = np.zeros((2,n),dtype=np.longdouble)
     rows = 2
     columns = n
     for i in range(rows):
         for j in range(columns):
             if j == ii and i==1:
-                key_matrix[1][j] = ((key_matrix[1][ii])**s)*(g**t)
+                key_matrix[1][j] = ((A[1][ii])**s)*(g**t)
             else:
-                key_matrix[i][j] = (key_matrix[i][j])**s
+                key_matrix[i][j] += (A[i][j])**s
     return key_matrix

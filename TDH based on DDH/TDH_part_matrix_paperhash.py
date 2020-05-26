@@ -22,20 +22,18 @@ class TDH(object):
         #1. Sample (G; p; g); (Finite-) multiplicative abelian group G of prime order p, with a public generator g
         G = Group("mult", 9)
         Gg = G.g() #Group representation
-        p = G.o #order of G
+        p = np.longdouble(G.o) #order of G
         generators_of_G = []
         for i in Gg: #finding generator of Group G
             x = np.array(G.gcycle(i))
             x_sorted = np.sort(x)
             if np.array_equal(Gg,x_sorted):
                 generators_of_G.append(i)
-        generator = random.choice(generators_of_G)
-        rand_elem_1 = np.array(np.random.choice(p, 10), dtype=np.longdouble)
-        rand_elem_2 = np.array(np.random.choice(p, 10), dtype=np.longdouble)
+        generator = np.longdouble(random.choice(generators_of_G))
+        # 2. Sample a matrix A
+        rand_elem_1 = np.array(np.random.choice(Gg, 10), dtype=np.longdouble)
+        rand_elem_2 = np.array(np.random.choice(Gg, 10), dtype=np.longdouble)
         A = np.concatenate(([rand_elem_1], [rand_elem_2]))
-        #A = getRandomMatrix(n)
-        p = np.longdouble(G.o)
-        #2. Sample a matrix A
         #3.Create hash key output; Pillar sign means Product from i=1 to n or over all elements i in set I
         hashkey = (Gg,p,generator), A
         return hashkey
@@ -71,8 +69,9 @@ class TDH(object):
     #..and deterministically outputs an encoding e element of {0,1}**w.
     def encoding_algorithm(self,generating_algorithm,sampling_algorithm,n): #encoding done by sender
         (G, p, g), A = sampling_algorithm
+        r = p
         (u,B) = generating_algorithm[0]
-        H_x = hash_value_paper(B,p,u,n) # taken only x parts of key_nr => is that the whole encryption?
+        H_x = hash_value_paper(B,r,u,n) # taken only x parts of key_nr => is that the whole encryption?
         #e = (u**r)*B_prod -> paper ansatz
         #ê = distance(e_key_nr)%2 #TBD
         #full_e = u_r * B_prod
