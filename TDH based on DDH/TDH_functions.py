@@ -12,7 +12,7 @@ def getRandomMatrix(n):
     #matrix = np.random.randint(2, size=(2, n))
     return matrix
 
-def hash_value_paper(A,r,g,n):
+def hash_value_paper(A,g,r,n):
     hash = np.longdouble(1)
     g_r = g**r
     for i in range(2):
@@ -50,7 +50,7 @@ def key_matrix(n,A,s,t,g):
     for i in range(rows):
         for j in range(columns):
             if j == ii and i==1:
-                key_matrix[1][j] = ((A[1][ii])**s)*(g**t)
+                key_matrix[1][j] += ((A[1][ii])**s)*(g**t)
             else:
                 key_matrix[i][j] += (A[i][j])**s
     return key_matrix
