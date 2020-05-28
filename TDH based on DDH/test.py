@@ -1,30 +1,35 @@
-import numpy as np
-import random
-import matplotlib.pyplot
-from pip._vendor.distlib.compat import raw_input
-from TDH_functions import *
-import hashlib
+import sys
 
-from groups import Group #https://github.com/Smeths/pygroup
-G = Group("mult", 15)
-Gg = G.g()
-p = G.o
-g = np.array(G.gcycle(p))
-rand_elem_1 = np.array(np.random.choice(p, 10)).astype(int)
-rand_elem_2 = np.array(np.random.choice(p, 10)).astype(int)
-A = np.concatenate(([rand_elem_1], [rand_elem_2])).astype('int64')
+SEED_SIZE  = 16
+GENERATOR  = 223
+MODULUS    = 36389
+initial_seed = [0,0]
+
+FUNCTION_L = lambda x: x**2 - 2*x + 1
 
 
-#https://www.thesslstore.com/blog/difference-sha-1-sha-2-sha-256-hash-algorithms/ -- Sha1,2 erklärt
-#https://www.geeksforgeeks.org/sha-in-python/ -- SHA, ( Secure Hash Algorithms )
-#RSA's MD5: 128 bit hash value similiar to SHA1: The 160 bit hash function that resembles MD5 hash in working and was discontinued to be used seeing its security vulnerabilities.
-result = hashlib.md5(A.encode())
-print(result.hexdigest())
+def function_H(first_half, second_half):
+    mod_exp = bin(pow(GENERATOR, int(first_half, 2), MODULUS)).replace('0b', '').zfill(SEED_SIZE)
+    hard_core_bit = 0
+    for i in range(len(first_half)):
+        hard_core_bit = (hard_core_bit ^ (int(first_half[i]) & int(second_half[i]))) % 2
+    return mod_exp + second_half + str(hard_core_bit)
 
-#The variety of SHA-2 hashes can lead to a bit of confusion, as websites and authors express them differently.
-#If you see “SHA-2,” “SHA-256” or “SHA-256 bit,” those names are referring to the same thing. If you see “SHA-224,” “SHA-384,” or “SHA-512,” those are referring to the alternate bit-lengths of SHA-2.
-A = str(A)
-result = hashlib.sha256(A.encode()) #This hash function belong to hash class SHA-2, the internal block size of it is 32 bits.
-print(result.hexdigest())
 
+def function_G(initial_seed):
+    binary_string = initial_seed
+    result = ''
+    for i in range(FUNCTION_L(SEED_SIZE)):
+        first_half = binary_string[:len(binary_string)/2]
+        second_half = binary_string[len(binary_string)/2:]
+        binary_string = function_H(first_half, second_half)
+        result += binary_string[-1]
+        binary_string = binary_string[:-1]
+    return result
+
+
+
+
+if __name__ == '__main__':
+    function_G('00')
 

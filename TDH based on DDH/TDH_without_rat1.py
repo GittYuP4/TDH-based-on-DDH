@@ -3,8 +3,7 @@ import random
 from pip._vendor.distlib.compat import raw_input
 from TDH_functions import *
 from groups import Group #https://github.com/Smeths/pygroup
-import hashlib
-
+from scipy.stats import logser
 #Goal: Implement the Trapdoor hash function from DDH assumption
 
 #the trapdoor hash function consists only from the Key generation, Encoding and Decoding part
@@ -79,27 +78,31 @@ class TDH(object):
     def decoding_algorithm(self,sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm): #decoding is done by receiver but problem is only needs generator value others are private to sender --> TBD
         (G, p, g),A,r = sampling_algorithm #imported for the generator needed but it seams as its not the generator meant but the g from matrix key -- as well receiver can't have access to full Matrix A,otherwise would not need encoding
         h = hashing_algorithm
-        e = encoding_algorithm
+        e = round(encoding_algorithm,5)
+        rate = 1 / np.linalg.norm(e)
+        print("e is",e)
         (s,t) = generating_algorithm[1]
         #h_s = [element ** s for element in h]
-        h_s = h**s
+        h_s = round(h**s,5)
+        print("h_s is",h_s)
         g_t = g**t
         #h_s_g_t = [element * g_t for element in h_s]
-        h_s_g_t = h_s*g_t
+        h_s_g_t = round(h_s*g_t,5)
+        print("h_s_g_t is", h_s_g_t)
         x_i=2
         #e_0 = [None] * (len(h_s))
         #e_1 = [None] * (len(h_s))
-        e_0 = 0
-        e_1 = 0
+        e_0 = h_s
+        e_1 = h_s_g_t
         #for i in range(len(h_s)):
         if e == h_s:
             x_i = 0
+            print(x_i)
+            return e_0, e_1, rate
         if e == h_s_g_t:
             x_i = 1
-        print(x_i)
-        e_0 = h_s
-        e_1 = h_s_g_t
-        return e_0,e_1 #geben i keys aus hier
+            print(x_i)
+            return e_0, e_1, rate
 
 #aufgeschrieben wegen fehlender Variation, kann aber gar nicht mehr haben, da maximal eine Kolonne/ein e0,e1 für x[i] gefunden werden kann; d.h. nur e0[i],e1[i] per key i ausgeben
         ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
@@ -112,5 +115,5 @@ if __name__ == '__main__':
     hashing_algorithm = TDH(lambda_var,n).hashing_algorithm(sampling_algorithm,n)
     encoding_algorithm = TDH(lambda_var,n).encoding_algorithm(generating_algorithm,sampling_algorithm,n)
     decoding_algorithm = TDH(lambda_var,n).decoding_algorithm(sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm)
-    print(generating_algorithm[0][1])
+    #print(generating_algorithm[0][1])
     print(decoding_algorithm)
