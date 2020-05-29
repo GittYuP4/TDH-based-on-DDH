@@ -73,7 +73,9 @@ class TDH(object):
         (u,B,t,K) = generating_algorithm[0]
         e = hash_value_paper(B,u,r,n) # taken only x parts of key_nr => is that the whole encryption?
         delta = (1 / lambda_var)
-        e = function_G(e,delta,1,K,g,t)
+        K = lambda_var
+        e = function_G(K,g,p)
+        e = np.longdouble(e[0])
         #full_e = u_r * B_prod
         return e
 
@@ -81,14 +83,13 @@ class TDH(object):
     #...and outputs a pair of a 0-encoding and a 1-necoding (e0,e1) element of {0,1}**w x {0,1}**w
     def decoding_algorithm(self,sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm): #decoding is done by receiver but problem is only needs generator value others are private to sender --> TBD
         (G, p, g),A,r = sampling_algorithm #imported for the generator needed but it seams as its not the generator meant but the g from matrix key -- as well receiver can't have access to full Matrix A,otherwise would not need encoding
+        g = int(g)
+        p = int(p)
         h = hashing_algorithm
-        e = round(encoding_algorithm,5)
-        rate = 1 / np.linalg.norm(e)
-        print("e is",e)
+        e = encoding_algorithm
         (s,t,K) = generating_algorithm[1]
         #h_s = [element ** s for element in h]
         h_s = round(h**s,5)
-        print("h_s is",h_s)
         g_t = g**t
         #h_s_g_t = [element * g_t for element in h_s]
         h_s_g_t = round(h_s*g_t,5)
@@ -96,23 +97,20 @@ class TDH(object):
         x_i=2
         #e_0 = [None] * (len(h_s))
         #e_1 = [None] * (len(h_s))
-        e_0 = h_s
-        e_1 = h_s_g_t
+        #e_0 = h_s
+        #e_1 = h_s_g_t
+        e_0 = function_G(lambda_var,g,p)
+        e_1 = function_G(lambda_var,g,p)
+        e_0 = np.longdouble(e_0[0])
+        e_1 = np.longdouble(e_1[0])
         #for i in range(len(h_s)):
-        if e == h_s:
-            x_i = 0
-            print(x_i)
-            return e_0, e_1, rate
-        if e == h_s_g_t:
-            x_i = 1
-            print(x_i)
-            return e_0, e_1, rate
+        return e_0, e_1
 
 #aufgeschrieben wegen fehlender Variation, kann aber gar nicht mehr haben, da maximal eine Kolonne/ein e0,e1 für x[i] gefunden werden kann; d.h. nur e0[i],e1[i] per key i ausgeben
         ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
 
 if __name__ == '__main__':
-    lambda_var = 3                  #int(raw_input("Enter lambda value: "))
+    lambda_var = 4                  #int(raw_input("Enter lambda value: "))
     n = 10                            #int(raw_input("Enter input length: "))
     sampling_algorithm = TDH(lambda_var,n).sampling_algorithm(lambda_var,n)
     generating_algorithm = TDH(lambda_var,n).generating_algorithm(sampling_algorithm)
@@ -120,4 +118,5 @@ if __name__ == '__main__':
     encoding_algorithm = TDH(lambda_var,n).encoding_algorithm(generating_algorithm,sampling_algorithm,n)
     decoding_algorithm = TDH(lambda_var,n).decoding_algorithm(sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm)
     #print(generating_algorithm[0][1])
+    print(encoding_algorithm)
     print(decoding_algorithm)
