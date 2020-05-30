@@ -6,11 +6,6 @@ import hashlib
 import math
 from scipy.stats import logser
 import sys
-SEED_SIZE  = 16 #the longer the seed, the less predictable the sequence of bits
-MODULUS    = 36389
-FUNCTION_L = lambda x: x**2 - 2*x + 1 #chosen polynomial function to increase length of output string for H
-
-#https://stackoverflow.com/questions/27784465/how-to-randomly-get-0-or-1-every-time
 
 #generate random public parameters with values {0,1} and put into binary matrix A
 def getRandomMatrix(n):
@@ -65,10 +60,14 @@ def distance_g_t_paper(e,delta,M,K,g,t):
     T = (2*M*math.log(2/delta))/delta
     LSB = 0 #least significant bit, gibt Parität an eines bit-strings,d.h. ob gerade(1) oder ungerade(0)
     i=0
+    asd = e*g
     g_t = g**t
     random.seed()
     log_2M = []
     upper_bound = int(round(math.log(2*M/delta), 0))
+    K_string = []  # must be even to split string into 2 halfes
+    for j in range(0, K):
+        K_string.append(random.randint(0, 1))
     #PRF_K_i = [1]  #(e*(g_t)) #e is the hash values
     for x in range(upper_bound):
         log_2M.append(0)
@@ -92,25 +91,36 @@ def distance_g_t_yt(e,delta,M,K):
         i +=1
 
 
-def function_H(first_half, second_half,generator): #helper_PRNG
-    mod_exp = bin(pow(generator, int(first_half, 2), MODULUS)).replace('0b', '').zfill(SEED_SIZE)
+#https://towardsdatascience.com/building-a-pseudorandom-number-generator-9bc37d3a87d5
+#https://crypto.stackexchange.com/questions/9076/using-a-hash-as-a-secure-prng
+FUNCTION_L = lambda x: x**2 - 2*x + 1
+
+def function_G(h,K,generator,modulus,M,delta): #PRNG function
+    T = int((2 * M * math.log(2 / delta)) / delta)
+    binary_string = [] #must be even to split string into 2 halfes
+    h = int(h)
+    generator = int(generator)
+    random.seed()
+    for j in range(0,K):
+        binary_string.append(random.randint(0,1))
+    binary_string = str("".join(str(i) for i in binary_string))
+    result = ''
+    for i in range(FUNCTION_L(T)):
+        if i == j:
+            return result[-1]
+        else:
+            first_half = binary_string[:int(K/2)]
+            second_half = binary_string[int(K/2):]
+            binary_string = function_H(first_half, second_half,(h*(generator**i)),T,modulus)
+            result += binary_string[-1]
+            binary_string = binary_string[:-1]
+    return result[-1]
+
+def function_H(first_half, second_half,generator,T,modulus): #helper_PRNG
+    mod_exp = bin(pow(generator, int(first_half, 2), modulus)).replace('0b', '').zfill(T)
     hard_core_bit = 0
     for i in range(len(first_half)):
         hard_core_bit = (hard_core_bit ^ (int(first_half[i]) & int(second_half[i]))) % 2
     return mod_exp + second_half + str(hard_core_bit)
 
-#https://towardsdatascience.com/building-a-pseudorandom-number-generator-9bc37d3a87d5
-def function_G(K,generator,modulus): #PRNG function
-    binary_string = [] #must be even to split string into 2 halfes
-    generator = int(generator)
-    for j in range(0,K):
-        binary_string.append(random.randint(0,1))
-    binary_string = str("".join(str(i) for i in binary_string))
-    result = ''
-    for i in range(FUNCTION_L(SEED_SIZE)):
-        first_half = binary_string[:int(K/2)]
-        second_half = binary_string[int(K/2):]
-        binary_string = function_H(first_half, second_half,generator)
-        result += binary_string[-1]
-        binary_string = binary_string[:-1]
-    return result
+

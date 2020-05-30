@@ -13,7 +13,7 @@ class TDH(object):
     #4.2. TDH for Index Predicates from DDH
     ##4.2.1“basic” construction of a rate-1/λ TDH scheme for index predicates
     def __init__(self,lambda_var,n):
-        self.lambda_var = lambda_var #the higher lambda the less predictable the bits
+        self.lambda_var = lambda_var
         self.n = n
 
     #S for Sampling Algorithm with inputs security parameter lambda and input length n (1^lambda,1^n)
@@ -46,7 +46,9 @@ class TDH(object):
         (G,p,g),A,r = sampling_algorithm
         s = np.longdouble(random.randint(0,p-1)) #s and t are trapdoor functions
         t = np.longdouble(random.randint(0,p-1))
-        K = lambda_var
+        K = []
+        for i in range(lambda_var):
+            K.append(random.randint(0,1))
         #2. Set
         u = g**s
         B = key_matrix(n,A,s,t,g)
@@ -69,12 +71,10 @@ class TDH(object):
     def encoding_algorithm(self,generating_algorithm,sampling_algorithm,n): #encoding done by sender
         (G,p,g),A,r = sampling_algorithm
         (u,B,t,K) = generating_algorithm[0]
-        p = int(p)
-        g_t = g**t
         h = hash_value_paper(B,u,r,n) # taken only x parts of key_nr => is that the whole encryption?
         delta = (1 / lambda_var)
-        e = function_G(h,K,g_t,p,1,delta)
-        #e = np.longdouble(e[0])
+        K = lambda_var
+        e = distance_g_t_paper(h,delta,1,K,g,t)
         #full_e = u_r * B_prod
         return e
 
@@ -82,26 +82,26 @@ class TDH(object):
     #...and outputs a pair of a 0-encoding and a 1-necoding (e0,e1) element of {0,1}**w x {0,1}**w
     def decoding_algorithm(self,sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm): #decoding is done by receiver but problem is only needs generator value others are private to sender --> TBD
         (G, p, g),A,r = sampling_algorithm #imported for the generator needed but it seams as its not the generator meant but the g from matrix key -- as well receiver can't have access to full Matrix A,otherwise would not need encoding
-        g = int(g)
-        p = int(p)
         h = hashing_algorithm
         e = encoding_algorithm
         (s,t,K) = generating_algorithm[1]
-        delta = 1/K
+        delta = (1 / lambda_var)
+        K = lambda_var
         #h_s = [element ** s for element in h]
-        h_s = h**s
+        h_s = round(h**s,5)
         g_t = g**t
-        h_s_g_t = h_s*g_t
+        #h_s_g_t = [element * g_t for element in h_s]
+        h_s_g_t = round(h_s*g_t,5)
         print("h_s_g_t is", h_s_g_t)
-        e_0 = h_s
-        e_1 = h_s_g_t
-        e_0 = function_G(e_0,K,g_t,p,1,delta)
-        e_1 = function_G(e_1,K,g_t,p,1,delta)
+        x_i=2
+        e_0 = s
+        e_1 = h
+        e_0 = distance_g_t_paper(h,delta,1,K,g,t)
+        e_1 = distance_g_t_paper(h,delta,1,K,g,t)
         return e_0, e_1
 
 #aufgeschrieben wegen fehlender Variation, kann aber gar nicht mehr haben, da maximal eine Kolonne/ein e0,e1 für x[i] gefunden werden kann; d.h. nur e0[i],e1[i] per key i ausgeben
         ##4.2.2.Augmentation to rate-1 TDH in the expense of a λ1 error probability
-
 
 if __name__ == '__main__':
     lambda_var = 4                  #int(raw_input("Enter lambda value: "))
