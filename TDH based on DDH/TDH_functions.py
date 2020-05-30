@@ -1,18 +1,9 @@
 from __future__ import generators
-from random import randint
 import random
 import numpy as np
-import hashlib
 import math
-from scipy.stats import logser
-import sys
 
-#generate random public parameters with values {0,1} and put into binary matrix A
-def getRandomMatrix(n):
-    matrix = np.array([[str(randint(0, 1)) for _ in range(0, n)] for _ in range(0, 2)]).astype(np.int8)
-    #matrix = np.random.randint(2, size=(2, n))
-    return matrix
-
+#calculate hash_value with equation 4.5
 def hash_value_paper(A,g,r,n):
     hash = np.longdouble(1)
     g_r = g**r
@@ -23,28 +14,9 @@ def hash_value_paper(A,g,r,n):
     hash = g_r*hash
     return hash
 
-#https://www.geeksforgeeks.org/sha-in-python/ -- SHA, ( Secure Hash Algorithms )
-#The variety of SHA-2 hashes can lead to a bit of confusion, as websites and authors express them differently.
-#If you see “SHA-2,” “SHA-256” or “SHA-256 bit,” those names are referring to the same thing. If you see “SHA-224,” “SHA-384,” or “SHA-512,” those are referring to the alternate bit-lengths of SHA-2.
-def sha256_hash(A):
-    A = str(A)
-    result = hashlib.sha1(A.encode()) #This hash function belong to hash class SHA-2, the internal block size of it is 32 bits.
-    return result.hexdigest()
-
-def hash_value_yt(A,g,r,n):
-    #works
-    hash = []
-    y=0
-    while y != n-1:
-            if A[0][y] == 0:
-               hash.append(0)
-            if A[1][y] == 1:
-               hash.append(1)
-            y += 1
-    return hash
-
+#calculate the encoding matrix with equation 4.6
 def key_matrix(n,A,s,t,g):
-    ii = random.randint(0,n-1) #ii, meaning i, remains private given the encoding key
+    ii = random.randint(0,n-1) #ii, meaning index i from the paper
     key_matrix = np.zeros((2,n),dtype=np.longdouble)
     rows = 2
     columns = n
@@ -56,46 +28,16 @@ def key_matrix(n,A,s,t,g):
                 key_matrix[i][j] += (A[i][j])**s
     return key_matrix
 
-def distance_g_t_paper(e,delta,M,K,g,t):
-    T = (2*M*math.log(2/delta))/delta
-    LSB = 0 #least significant bit, gibt Parität an eines bit-strings,d.h. ob gerade(1) oder ungerade(0)
-    i=0
-    asd = e*g
-    g_t = g**t
-    random.seed()
-    log_2M = []
-    upper_bound = int(round(math.log(2*M/delta), 0))
-    K_string = []  # must be even to split string into 2 halfes
-    for j in range(0, K):
-        K_string.append(random.randint(0, 1))
-    #PRF_K_i = [1]  #(e*(g_t)) #e is the hash values
-    for x in range(upper_bound):
-        log_2M.append(0)
-    while i <= T:
-       # PRF_K_i = [element*(e**i) for element in PRF_K_i]
-        PRF_K_hgi = 1
-        if np.array_equal(PRF_K_hgi,log_2M):
-            LSB = i
-            return LSB
-        i +=1
-
-def distance_g_t_yt(e,delta,M,K):
-    T = (2*M*math.log(2/delta))/delta
-    LSB = 0 #longest string bit
-    i=0
-    dlog = logser.logpmf(K,delta)
-    while i <= T:
-        if logser.ppf(i, 1, len(K)) == 0**(round(M*math.log(2/delta),1)):
-            LSB = i
-            return LSB
-        i +=1
-
-
-#https://towardsdatascience.com/building-a-pseudorandom-number-generator-9bc37d3a87d5
-#https://crypto.stackexchange.com/questions/9076/using-a-hash-as-a-secure-prng
+#*************************************************************
+# Title: prng.py - Building a Pseudorandom Number Generator
+# Author: David Bertoldi - firaja
+# Date: 2019
+# Code version: 1.0
+# Availability: https://gist.github.com/firaja/f2eabc05db3fdd4cf60373f5971b4eb3
+#*************************************************************
+# PRNG functions G and H from prng repo combined with the distance function from chapter 4.2.2
 FUNCTION_L = lambda x: x**2 - 2*x + 1
-
-def function_G(h,K,generator,modulus,M,delta): #PRNG function
+def function_G(h,K,generator,modulus,M,delta):
     T = int((2 * M * math.log(2 / delta)) / delta)
     binary_string = [] #must be even to split string into 2 halfes
     h = int(h)
