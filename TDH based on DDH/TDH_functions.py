@@ -100,9 +100,12 @@ def function_G(h,K,generator,modulus,M,delta): #PRNG function
     binary_string = [] #must be even to split string into 2 halfes
     h = int(h)
     generator = int(generator)
+    modulus = int(modulus)
     random.seed()
+    j = 0
     for j in range(0,K):
         binary_string.append(random.randint(0,1))
+        j=j
     binary_string = str("".join(str(i) for i in binary_string))
     result = ''
     for i in range(FUNCTION_L(T)):
@@ -117,7 +120,7 @@ def function_G(h,K,generator,modulus,M,delta): #PRNG function
     return result[-1]
 
 def function_H(first_half, second_half,generator,T,modulus): #helper_PRNG
-    mod_exp = bin(pow(generator, int(first_half, 2), modulus)).replace('0b', '').zfill(T)
+    mod_exp = bin(pow(generator, int(first_half, 2), modulus)).replace('0b', '').zfill(T) #if we set the modulus higher, we also get a more variation in the result
     hard_core_bit = 0
     for i in range(len(first_half)):
         hard_core_bit = (hard_core_bit ^ (int(first_half[i]) & int(second_half[i]))) % 2

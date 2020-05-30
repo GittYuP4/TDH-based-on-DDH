@@ -1,7 +1,3 @@
-import numpy as np
-import random
-
-from pip._vendor.distlib.compat import raw_input
 
 from TDH_functions import *
 from groups import Group #https://github.com/Smeths/pygroup
@@ -22,7 +18,7 @@ class TDH(object):
     #..and outputing as hash key hk
     def sampling_algorithm(self): # done by the sender, output also private and only used in the hashing_algorithm again by the sender
         #1. Sample (G; p; g); (Finite-) multiplicative abelian group G of prime order p, with a public generator g
-        G = Group("mult", 9) #group object
+        G = Group("mult", 7) #group object
         Gg = G.g() #Group list representation
         p = np.longdouble(G.o) #order of G
         generators_of_G = []
@@ -71,7 +67,6 @@ class TDH(object):
     def encoding_algorithm(self,generating_algorithm,sampling_algorithm,n,rate_1): #encoding done by sender
         (G,p,g),A,r = sampling_algorithm
         (u,B,t,K) = generating_algorithm[0]
-        p = int(p)
         g_t = g**t
         e = hash_value_paper(B,u,r,n) # taken only x parts of key_nr => is that the whole encryption?
         delta = (1 / K)
@@ -85,17 +80,17 @@ class TDH(object):
     #...and outputs a pair of a 0-encoding and a 1-necoding (e0,e1) element of {0,1}**w x {0,1}**w
     def decoding_algorithm(self,sampling_algorithm,hashing_algorithm,generating_algorithm,encoding_algorithm,rate_1): #decoding is done by receiver but problem is only needs generator value others are private to sender --> TBD
         (G, p, g),A,r = sampling_algorithm #imported for the generator needed but it seams as its not the generator meant but the g from matrix key -- as well receiver can't have access to full Matrix A,otherwise would not need encoding
-        g = int(g)
-        p = int(p)
         h = hashing_algorithm
         e = encoding_algorithm
         (s,t,K) = generating_algorithm[1]
-        delta = 1/K
         #h_s = [element ** s for element in h]
         h_s = h**s
         g_t = g**t
         h_s_g_t = h_s*g_t
         if rate_1 == 'yes':
+            g = int(g)
+            p = int(p)
+            delta = 1 / K
             e_0 = h_s
             e_1 = h_s*g
             e_0 = function_G(e_0,K,g_t,p,1,delta)
@@ -121,7 +116,7 @@ def main():
     yes = {'yes', 'y', 'ye'}
     no = {'no', 'n',''}
 
-    rate_1 = raw_input("Do you want the code to run with rate 1?").lower()
+    rate_1 = 'y'   #raw_input("Do you want the code to run with rate 1?").lower()
     if rate_1 in yes:
         rate_1 = 'yes'
     elif rate_1 in no:
@@ -129,8 +124,8 @@ def main():
     else:
         sys.stdout.write("Please enter with either 'yes' or 'no' again")
 
-    lambda_var = int(raw_input("Enter lambda value: "))
-    n = int(raw_input("Enter input length: "))
+    lambda_var = 4   #int(raw_input("Enter lambda value: "))
+    n = 10   #int(raw_input("Enter input length: "))
     sampling_algorithm = TDH(lambda_var,n,rate_1).sampling_algorithm()
     generating_algorithm = TDH(lambda_var,n,rate_1).generating_algorithm(sampling_algorithm,lambda_var,n)
     hashing_algorithm = TDH(lambda_var,n,rate_1).hashing_algorithm(sampling_algorithm, n)
