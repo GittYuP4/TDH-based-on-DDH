@@ -1,5 +1,6 @@
 ### Cryptography and Security Protocols project
-# An implementation of chapter 4.2. from Trapdoor Hash Functions and Their Applications by Döttling et al. 2019 
+# An implementation of chapter 4.2. from Trapdoor Hash Functions and Their Applications by Döttling et al. 2019.
+# I was the first person implementating this paper. I did it on my own during my univsersity course 'Cryptography and Security Protocols' in my exhange semester at IST Lisbon. I got 19 out of 20 points in the final evaluation.
 
 The whole code is implemented in the class TDH() in the TDH_implementation.py file. It contains a constructor and 5 more methods. In the TDH functions.py file, additional help functions have been created. The constructor simply initializes n, lambda and rate_1 which can be chosen by the user.
 
